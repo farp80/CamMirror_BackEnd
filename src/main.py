@@ -8,9 +8,16 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from models import db
-#from models import Person
+from flask import Flask, jsonify, request
+from flask_jwt_simple import (
+    JWTManager, jwt_required, create_jwt, get_jwt_identity
+)
+from models import Users
 
 app = Flask(__name__)
+# Setup the Flask-JWT-Simple extension
+app.config['JWT_SECRET_KEY'] = 'camMirror@4Geeks'  # Change this!
+jwt = JWTManager(app)
 app.url_map.strict_slashes = False
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DB_CONNECTION_STRING')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -28,14 +35,34 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
-@app.route('/hello', methods=['POST', 'GET'])
-def handle_person():
+@app.route('/login', methods=['POST'])
+def login():
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request"}), 400
 
-    response_body = {
-        "hello": "world"
-    }
+    params = request.get_json()
+    email = params.get('email', None)
+    password = params.get('password', None)
 
-    return jsonify(response_body), 200
+    if not email:
+        return jsonify({"msg": "Missing username parameter"}), 400
+    if not password:
+        return jsonify({"msg": "Missing password parameter"}), 400
+
+    if email == '' or password == '':
+        return jsonify({"msg": "Bad username or password"}), 401
+
+    # Identity can be any data that is json serializable
+    ret = {'jwt': create_jwt(identity=email)}
+    return jsonify(ret), 200
+
+# Protect a view with jwt_required, which requires a valid jwt
+# to be present in the headers.
+@app.route('/protected', methods=['GET'])
+@jwt_required
+def protected():
+    # Access the identity of the current user with get_jwt_identity
+    return jsonify({'hello_from': get_jwt_identity()}), 200
 
 # this only runs if `$ python src/main.py` is exercuted
 if __name__ == '__main__':
