@@ -54,7 +54,9 @@ def signup():
         return jsonify({"msg": "Bad username or password"}), 401
 
     people_query = Users.query.filter_by(email=email).first()
-    print('##### ' + people_query)
+    if people_query:
+        return jsonify({"msg": "User Already Exists"}), 405
+
 
     user1 = Users(email=email, password=password)
     db.session.add(user1)
