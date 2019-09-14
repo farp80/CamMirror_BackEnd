@@ -35,6 +35,44 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
+
+@app.route('/user', methods=['GET'])
+def get_all_users():
+    contacts_query = Users.query.all()
+    contacts_query = list(map(lambda x: x.serialize(), contacts_query))
+    return jsonify(contacts_query), 200
+
+
+@app.route('/user/<int:user_id>', methods=['DELETE', 'PUT'])
+def delete_user(user_id):
+    if request.method == 'DELETE':
+    user1 = User.query.get(user_id)
+    if user1 is None:
+        raise APIException('User not found', status_code=404)
+
+    db.session.delete(user1)
+    db.session.commit()
+    return jsonify(user1.serialize()), 200
+
+    if request.method == 'PUT':
+        body = request.get_json()
+    if body is None:
+        raise APIException("You need to specify the request body as a json object", status_code=400)
+    user1 = Contact.query.get(contact_id)
+    if user1 is None:
+        raise APIException('User not found', status_code=404)
+    if "first_name" in body:
+        user1.full_name = body["first_name"]
+    if "email" in body:
+        user1.email = body["email"]
+    if "last_name" in body:
+        user1.phone = body["last_name"]
+    if "password" in body:
+        user1.address = body["password"]
+    db.session.commit()
+    return jsonify(user1.serialize()), 200
+
+
 @app.route('/signup', methods=['POST'])
 def signup():
     if not request.get_json:
