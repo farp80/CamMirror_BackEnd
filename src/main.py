@@ -115,13 +115,8 @@ def signup():
     return jsonify({"msg": "User created"}), 200
 
 
-
-
-@app.route('/login', methods=['POST', 'GET'])
+@app.route('/login', methods=['POST'])
 def login():
-    users = Users.query.all()
-    users_query = list(map(lambda x: x.serialize(), users_query))
-    return jsonify(users_query), 200
 
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request"}), 400
@@ -135,12 +130,13 @@ def login():
     if not password:
         return jsonify({"msg": "Missing password parameter"}), 400
 
-    if email == '' or password == '':
+    usercheck = User.query.filter_by(username=username, password=password).first()
+    if usercheck == None:
         return jsonify({"msg": "Bad username or password"}), 401
 
     # Identity can be any data that is json serializable
-    ret = {'jwt': create_jwt(identity=email)}
-    return jsonify(ret), 200
+        ret = {'jwt': create_jwt(identity=email)}
+        return jsonify(ret), 200
 
 
 # Protect a view with jwt_required, which requires a valid jwt
