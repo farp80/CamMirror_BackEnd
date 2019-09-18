@@ -130,7 +130,7 @@ def login():
     if not password:
         return jsonify({"msg": "Missing password parameter"}), 400
 
-    usercheck = User.query.filter_by(username=username, password=password).first()
+    usercheck = User.query.filter_by(email=email).first()
     if usercheck == None:
         return jsonify({"msg": "Bad username or password"}), 401
 
@@ -139,13 +139,42 @@ def login():
         return jsonify(ret), 200
 
 
+@app.route('/profile/<int:user_id>', methods=['POST'])
+def profile():
+    if not request.get_json:
+        return jsonify({"msg": "Missing JSON in request"}), 400
+
+    params = request.get_json()
+    email = params.get('email', None)
+    password = params.get('password', None)
+    # print(email)
+    # print(password)
+    if not email:
+        return jsonify({"msg": "Missing username parameter"}), 400
+    if not password:
+        return jsonify({"msg": "Missing password parameter"}), 400
+
+    if email == '' or password == '':
+        return jsonify({"msg": "Bad username or password"}), 401
+
+    people_query = Users.query.filter_by(email=email).first()
+    if people_query:
+        return jsonify({"msg": "Bad username or password"}), 405
+
+
+    user1 = Profiles(email=email)
+    db.session.add(user1)
+    db.session.commit()
+    return jsonify({"msg": "logged in"}), 200
+
+
 # Protect a view with jwt_required, which requires a valid jwt
 # to be present in the headers.
 @app.route('/protected', methods=['GET'])
 @jwt_required
 def protected():
     # Access the identity of the current user with get_jwt_identity
-    return jsonify({'hello_from': get_jwt_identity()}), 200
+    return jsonify({'jwt': get_jwt_identity()}), 200
 
 # this only runs if `$ python src/main.py` is exercuted
 if __name__ == '__main__':
