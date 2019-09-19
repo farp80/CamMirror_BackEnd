@@ -6,6 +6,8 @@ from flask import Flask, request, jsonify, url_for
 from flask_migrate import Migrate
 from flask_swagger import swagger
 from flask_cors import CORS
+from picamera import picamera
+from time import sleep
 from utils import APIException, generate_sitemap
 from models import db
 from flask import Flask, jsonify, request
@@ -36,12 +38,21 @@ def sitemap():
     return generate_sitemap(app)
 
 
-
 @app.route('/user', methods=['GET'])
 def get_all_users():
     users = Users.query.all()
     users_query = list(map(lambda x: x.serialize(), users_query))
     return jsonify(users_query), 200
+
+
+@app.route('/picamera/<int:user_id>', methods=['POST'])
+def take_pic(user_id):
+    camera = PiCamera()
+    camera.rotation = 180
+    camera.start_preview()
+    sleep(5)
+    camera.stop_preview()
+    return jsonify({"msg":"PIC TAKEN"}), 200
 
 
 @app.route('/user/<int:user_id>', methods=['DELETE', 'PUT'])
@@ -72,8 +83,6 @@ def delete_user(user_id):
         user1.address = body["password"]
     db.session.commit()
     return jsonify(user1.serialize()), 200
-
-
 
 
 @app.route('/signup', methods=['POST'])
@@ -135,8 +144,8 @@ def login():
         return jsonify({"msg": "Bad username or password"}), 401
 
     # Identity can be any data that is json serializable
-        ret = {'jwt': create_jwt(identity=email)}
-        return jsonify(ret), 200
+    ret = {'jwt': create_jwt(identity=email)}
+    return jsonify(ret), 200
 
 
 # Protect a view with jwt_required, which requires a valid jwt
