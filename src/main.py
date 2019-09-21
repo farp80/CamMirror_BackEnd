@@ -9,7 +9,7 @@ from flask_cors import CORS
 from picamera import picamera
 from time import sleep
 from utils import APIException, generate_sitemap
-from models import db
+from models import db, Users
 from flask import Flask, jsonify, request
 from flask_jwt_simple import (
     JWTManager, jwt_required, create_jwt, get_jwt_identity
@@ -139,36 +139,35 @@ def login():
     if not password:
         return jsonify({"msg": "Missing password parameter"}), 400
 
-    usercheck = User.query.filter_by(email=email).first()
+    usercheck = Users.query.filter_by(email=email, password=password).first()
     if usercheck == None:
         return jsonify({"msg": "Bad username or password"}), 401
 
     # Identity can be any data that is json serializable
+<<<<<<< HEAD
     ret = {'jwt': create_jwt(identity=email)}
+=======
+    ret = {'jwt': create_jwt(identity=email),'id': usercheck.id}
+>>>>>>> 4641d16113861acba06579f67bf7a1cac05c12f8
     return jsonify(ret), 200
 
 
 @app.route('/profile/<int:user_id>', methods=['POST'])
-def profile():
+@jwt_required
+def profile(user_id):
     if not request.get_json:
         return jsonify({"msg": "Missing JSON in request"}), 400
 
     params = request.get_json()
-    email = params.get('email', None)
-    password = params.get('password', None)
-    # print(email)
-    # print(password)
-    if not email:
-        return jsonify({"msg": "Missing username parameter"}), 400
-    if not password:
-        return jsonify({"msg": "Missing password parameter"}), 400
 
-    if email == '' or password == '':
-        return jsonify({"msg": "Bad username or password"}), 401
+    print("###" +user_id)
 
     people_query = Users.query.filter_by(email=email).first()
-    if people_query:
-        return jsonify({"msg": "Bad username or password"}), 405
+    if people_query == None:
+
+        db.session.add(people_query)
+        db.session.commit()
+        return jsonify({"Profile Added"}), 200
 
 
     user1 = Profiles(email=email)
