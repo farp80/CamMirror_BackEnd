@@ -50,7 +50,7 @@ class Profiles(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     created_date = db.Column(db.DateTime, default=datetime.datetime.now(), nullable=True)
     updated_date = db.Column(db.DateTime, nullable=True)
-    membership_id = db.Column(db.Integer, db.ForeignKey('membership.id'))
+    membership_id = db.Column(db.Integer, db.ForeignKey('membership.id'), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
 
@@ -63,7 +63,8 @@ class Profiles(db.Model):
             "created_date": self.created_date,
             "updated_date": self.updated_date,
             "membership_id": self.membership_id,
-            "id": self.id
+            "id": self.id,
+            "user_id": self.user_id
         }
 
 

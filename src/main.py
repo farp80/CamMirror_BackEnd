@@ -2,14 +2,14 @@
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 import os
+import datetime
 from flask import Flask, request, jsonify, url_for
 from flask_migrate import Migrate
 from flask_swagger import swagger
 from flask_cors import CORS
-from picamera import picamera
 from time import sleep
 from utils import APIException, generate_sitemap
-from models import db, Users
+from models import db, Users, Profiles
 from flask import Flask, jsonify, request
 from flask_jwt_simple import (
     JWTManager, jwt_required, create_jwt, get_jwt_identity
@@ -43,16 +43,6 @@ def get_all_users():
     users = Users.query.all()
     users_query = list(map(lambda x: x.serialize(), users_query))
     return jsonify(users_query), 200
-
-
-@app.route('/picamera/<int:user_id>', methods=['POST'])
-def take_pic(user_id):
-    camera = PiCamera()
-    camera.rotation = 180
-    camera.start_preview()
-    sleep(5)
-    camera.stop_preview()
-    return jsonify({"msg":"PIC TAKEN"}), 200
 
 
 @app.route('/user/<int:user_id>', methods=['DELETE', 'PUT'])
@@ -144,36 +134,33 @@ def login():
         return jsonify({"msg": "Bad username or password"}), 401
 
     # Identity can be any data that is json serializable
-<<<<<<< HEAD
-    ret = {'jwt': create_jwt(identity=email)}
-=======
     ret = {'jwt': create_jwt(identity=email),'id': usercheck.id}
->>>>>>> 4641d16113861acba06579f67bf7a1cac05c12f8
     return jsonify(ret), 200
 
 
 @app.route('/profile/<int:user_id>', methods=['POST'])
 @jwt_required
 def profile(user_id):
-    if not request.get_json:
-        return jsonify({"msg": "Missing JSON in request"}), 400
+    people_query = Profiles.query.filter_by(user_id=user_id).first()
+    user_ToFind = Users.query.get(user_id)
 
-    params = request.get_json()
-
-    print("###" +user_id)
-
-    people_query = Users.query.filter_by(email=email).first()
     if people_query == None:
-
-        db.session.add(people_query)
+        profile_ToAdd = Profiles(user_id = user_ToFind.id, updated_date = datetime.datetime.now())
+        print("@@")
+        db.session.add(profile_ToAdd)
         db.session.commit()
-        return jsonify({"Profile Added"}), 200
 
-
-    user1 = Profiles(email=email)
-    db.session.add(user1)
-    db.session.commit()
-    return jsonify({"msg": "logged in"}), 200
+        return jsonify({
+            "first_name": user_ToFind.first_name,
+            "last_name": user_ToFind.last_name,
+            "currentUserId": user_ToFind.id
+            }), 200
+    print("$$ &&")
+    return jsonify({
+            "first_name": user_ToFind.first_name,
+            "last_name": user_ToFind.last_name,
+            "currentUserId": user_ToFind.id
+            }), 200
 
 
 # Protect a view with jwt_required, which requires a valid jwt
