@@ -2,10 +2,12 @@
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 import os
+import datetime
 from flask import Flask, request, jsonify, url_for
 from flask_migrate import Migrate
 from flask_swagger import swagger
 from flask_cors import CORS
+from time import sleep
 from utils import APIException, generate_sitemap
 from models import db, Users, Profiles, Membership
 from flask import Flask, jsonify, request
@@ -36,13 +38,11 @@ def sitemap():
     return generate_sitemap(app)
 
 
-
 @app.route('/user', methods=['GET'])
 def get_all_users():
     users_query = Users.query.all()
     users_query = list(map(lambda x: x.serialize(), users_query))
     return jsonify(users_query), 200
-
 
 
 @app.route('/signup', methods=['POST'])
