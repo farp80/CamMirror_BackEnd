@@ -31,6 +31,7 @@ class Membership(db.Model):
     # Notice that each column is also a normal Python instance attribute.
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(250), nullable=False)
+    profile_id = db.Column(db.Integer, db.ForeignKey('profile.id'))
 
     def __repr__(self):
         return '<Membership %r>' % self.id
@@ -39,7 +40,8 @@ class Membership(db.Model):
     def serialize(self):
         return {
             "name": self.name,
-            "id": self.id
+            "id": self.id,
+            "profile_id": self.profile_id
         }
 
 
@@ -63,7 +65,8 @@ class Profiles(db.Model):
             "created_date": self.created_date,
             "updated_date": self.updated_date,
             "membership_id": self.membership_id,
-            "id": self.id
+            "id": self.id,
+            "user_id": self.user_id
         }
 
 

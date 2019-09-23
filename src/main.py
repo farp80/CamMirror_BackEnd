@@ -7,7 +7,7 @@ from flask_migrate import Migrate
 from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
-from models import db, Users
+from models import db, Users, Profiles, Membership
 from flask import Flask, jsonify, request
 from flask_jwt_simple import (
     JWTManager, jwt_required, create_jwt, get_jwt_identity
@@ -39,40 +39,9 @@ def sitemap():
 
 @app.route('/user', methods=['GET'])
 def get_all_users():
-    users = Users.query.all()
+    users_query = Users.query.all()
     users_query = list(map(lambda x: x.serialize(), users_query))
     return jsonify(users_query), 200
-
-
-@app.route('/user/<int:user_id>', methods=['DELETE', 'PUT'])
-def delete_user(user_id):
-    if request.method == 'DELETE':
-        user1 = User.query.get(user_id)
-    if user1 is None:
-        raise APIException('User not found', status_code=404)
-
-    db.session.delete(user1)
-    db.session.commit()
-    return jsonify(user1.serialize()), 200
-
-    if request.method == 'PUT':
-        body = request.get_json()
-    if body is None:
-        raise APIException("You need to specify the request body as a json object", status_code=400)
-    user1 = Contact.query.get(contact_id)
-    if user1 is None:
-        raise APIException('User not found', status_code=404)
-    if "first_name" in body:
-        user1.full_name = body["first_name"]
-    if "email" in body:
-        user1.email = body["email"]
-    if "last_name" in body:
-        user1.phone = body["last_name"]
-    if "password" in body:
-        user1.address = body["password"]
-    db.session.commit()
-    return jsonify(user1.serialize()), 200
-
 
 
 
@@ -115,6 +84,7 @@ def signup():
     return jsonify({"msg": "User created"}), 200
 
 
+
 @app.route('/login', methods=['POST'])
 def login():
 
@@ -139,28 +109,91 @@ def login():
     return jsonify(ret), 200
 
 
-@app.route('/profile/<int:user_id>', methods=['POST'])
+@app.route('/profile', methods=['GET'])
+def get_all_profiles():
+    profile_query = Profiles.query.all()
+    profile_query = list(map(lambda x: x.serialize(), profile_query))
+    return jsonify(profile_query), 200
+
+@app.route('/profile', methods=['POST', 'DELETE', 'PUT'])
 @jwt_required
-def profile(user_id):
+def profile():
     if not request.get_json:
         return jsonify({"msg": "Missing JSON in request"}), 400
 
     params = request.get_json()
+    user_id = params.get('user_id', None)
 
-    print("###" +user_id)
-
-    people_query = Users.query.filter_by(email=email).first()
-    if people_query == None:
-
-        db.session.add(people_query)
-        db.session.commit()
-        return jsonify({"Profile Added"}), 200
-
-
-    user1 = Profiles(email=email)
-    db.session.add(user1)
+    new_profile = Profiles(user_id=params['user_id'],membership_id=None)
+    db.session.add(new_profile)
     db.session.commit()
-    return jsonify({"msg": "logged in"}), 200
+
+    profilecheck = Profiles.query.filter_by(user_id=user_id).first()
+
+    if request.method == 'DELETE':
+        profile1 = Profiles.query.get(user_id)
+    if profile1 is None:
+        raise APIException('Profile not found', status_code=404)
+
+    db.session.delete(profile1)
+    db.session.commit()
+    return jsonify(user1.serialize()), 200
+
+
+    # Identity can be any data that is json serializable
+    ret = {'profile_id': profilecheck.id}
+
+    return jsonify(ret), 200
+
+    if request.method == 'PUT':
+        body = request.get_json()
+    if body is None:
+        raise APIException("You need to specify the request body as a json object", status_code=400)
+    user1 = Contact.query.get(contact_id)
+    if user1 is None:
+        raise APIException('User not found', status_code=404)
+    if "first_name" in body:
+        user1.full_name = body["first_name"]
+    if "email" in body:
+        user1.email = body["email"]
+    if "last_name" in body:
+        user1.phone = body["last_name"]
+    if "password" in body:
+        user1.address = body["password"]
+    db.session.commit()
+    return jsonify(user1.serialize()), 200
+
+
+
+@app.route('/profile/membership', methods=['POST', 'DELETE'])
+@jwt_required
+def membership():
+
+    params = request.get_json()
+    name = params.get('name', None)
+    profile_id = params.get('profile_id', None)
+
+    new_member = Membership(profile_id=params['profile_id'])
+    db.session.add(new_member)
+    db.session.commit()
+
+    membershipcheck = Membership.query.filter_by(profile_id=profile_id).first()
+
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request"}), 400
+
+    if not name:
+        return jsonify({"msg": "Missing name parameter"}), 400
+
+    if request.method == 'DELETE':
+        membership1 = Membership.query.get(profile_id)
+    if membership1 is None:
+        raise APIException('Profile not found', status_code=404)
+
+    db.session.delete(membership1)
+    db.session.commit()
+    return jsonify(user1.serialize()), 200
+
 
 
 # Protect a view with jwt_required, which requires a valid jwt
