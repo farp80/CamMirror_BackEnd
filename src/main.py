@@ -124,45 +124,60 @@ def profile():
     params = request.get_json()
     user_id = params.get('user_id', None)
 
-    new_profile = Profiles(user_id=params['user_id'],membership_id=None)
-    db.session.add(new_profile)
-    db.session.commit()
+    if request.method == 'POST':
+        profilecheck = Profiles.query.filter_by(user_id=user_id).first()
+        user1 = Users.query.get(contact_id)
 
-    profilecheck = Profiles.query.filter_by(user_id=user_id).first()
+        if(profilecheck is None)
+            new_profile = Profiles(user_id=params['user_id'], membership_id=None)
+            db.session.add(new_profile)
+            db.session.commit()
+
+
+
+
+
+        return
+
+
+
+
+
+
+
+
 
     if request.method == 'DELETE':
         profile1 = Profiles.query.get(user_id)
-    if profile1 is None:
-        raise APIException('Profile not found', status_code=404)
 
-    db.session.delete(profile1)
-    db.session.commit()
-    return jsonify(user1.serialize()), 200
+        if profile1 is None:
+            raise APIException('Profile not found', status_code=404)
 
+        db.session.delete(profile1)
+        db.session.commit()
 
-    # Identity can be any data that is json serializable
-    ret = {'profile_id': profilecheck.id}
-
-    return jsonify(ret), 200
+        return jsonify(user1.serialize()), 200
 
     if request.method == 'PUT':
         body = request.get_json()
-    if body is None:
-        raise APIException("You need to specify the request body as a json object", status_code=400)
-    user1 = Contact.query.get(contact_id)
-    if user1 is None:
-        raise APIException('User not found', status_code=404)
-    if "first_name" in body:
-        user1.full_name = body["first_name"]
-    if "email" in body:
-        user1.email = body["email"]
-    if "last_name" in body:
-        user1.phone = body["last_name"]
-    if "password" in body:
-        user1.address = body["password"]
-    db.session.commit()
-    return jsonify(user1.serialize()), 200
 
+        if body is None:
+            raise APIException("You need to specify the request body as a json object", status_code=400)
+
+        user1 = Users.query.get(user_id)
+        if user1 is None:
+            raise APIException('User not found', status_code=404)
+        if "first_name" in body:
+            user1.full_name = body["first_name"]
+        if "email" in body:
+            user1.email = body["email"]
+        if "last_name" in body:
+            user1.phone = body["last_name"]
+        if "password" in body:
+            user1.address = body["password"]
+
+        db.session.commit()
+        return jsonify(user1.serialize()), 200
 
 
 @app.route('/profile/membership', methods=['POST', 'DELETE'])
