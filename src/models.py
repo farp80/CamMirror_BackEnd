@@ -21,7 +21,8 @@ class Users(db.Model):
             "last_name": self.last_name,
             "email": self.email,
             "password": self.password,
-            "id": self.id
+            "id": self.id,
+            "created_date": self.created_date
         }
 
 

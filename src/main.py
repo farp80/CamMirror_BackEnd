@@ -126,26 +126,20 @@ def profile():
 
     if request.method == 'POST':
         profilecheck = Profiles.query.filter_by(user_id=user_id).first()
-        user1 = Users.query.get(contact_id)
+        user1 = Users.query.get(user_id)
 
-        if(profilecheck is None)
-            new_profile = Profiles(user_id=params['user_id'], membership_id=None)
-            db.session.add(new_profile)
-            db.session.commit()
+        new_profile = Profiles(user_id=params['user_id'], membership_id=None)
+        db.session.add(new_profile)
+        db.session.commit()
+        print(user1.created_date)
+        response = {
+            "first_name": user1.first_name,
+            "last_name": user1.last_name,
+            "currentUserId": user1.id,
+            "created_date": user1.created_date
+        }
 
-
-
-
-
-        return
-
-
-
-
-
-
-
-
+        return jsonify(response), 200
 
     if request.method == 'DELETE':
         profile1 = Profiles.query.get(user_id)
