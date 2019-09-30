@@ -10,7 +10,6 @@ from flask_cors import CORS
 from time import sleep
 from utils import APIException, generate_sitemap
 from models import db, Users, Profiles, Membership
-from flask import Flask, jsonify, request
 from flask_jwt_simple import (
     JWTManager, jwt_required, create_jwt, get_jwt_identity
 )
@@ -131,7 +130,7 @@ def profile():
         new_profile = Profiles(user_id=params['user_id'], membership_id=None)
         db.session.add(new_profile)
         db.session.commit()
-        print(user1.created_date)
+
         response = {
             "first_name": user1.first_name,
             "last_name": user1.last_name,
