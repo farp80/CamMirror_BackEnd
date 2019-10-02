@@ -89,7 +89,6 @@ def signup():
 
 @app.route('/login', methods=['POST'])
 def login():
-
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request"}), 400
 
@@ -119,9 +118,11 @@ def get_all_profiles():
 
 
 @app.route('/picture/<int:profile_id>', methods=['GET'])
-def get_profiles(profile_id):
+def get_picture(profile_id):
     profile_picture_query = Pictures.query.filter_by(user_id = profile_id).distinct(Pictures.folder)
-    return jsonify("Good"), 200
+
+    all_pictures_folders = list(map(lambda x: x.serialize(), profile_picture_query))
+    return jsonify(all_pictures_folders), 200
 
 
 @app.route('/pictures', methods=['POST'])

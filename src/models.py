@@ -99,5 +99,5 @@ class Pictures(db.Model):
 
 
     def __repr__(self):
-        return '<Pictures %r>' % self.date
+        return '<Pictures %r>' % self.id
 

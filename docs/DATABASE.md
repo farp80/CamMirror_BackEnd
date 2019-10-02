@@ -67,9 +67,9 @@ if "email" in body:
     user1.email = body["email"]
 db.session.commit()
 ```
- 
+
  ### Delete data
- 
+
  ```py
  user1 = Person.query.get(person_id)
 if user1 is None:
@@ -79,7 +79,7 @@ db.session.commit()
  ```
 
 ## ONE to MANY relationship
-A one to many relationship places a foreign key on the child table referencing the parent. 
+A one to many relationship places a foreign key on the child table referencing the parent.
 relationship() is then specified on the parent, as referencing a collection of items represented by the child:
 
 ```py
@@ -102,10 +102,10 @@ class Child(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=False)
     parent_id = db.Column(db.Integer, db.ForeignKey("Parent.id"))
-    
+
     def __repr__(self):
         return '<Child {self.name}>
-        
+
     def serialize(self):
         return {
             "id": self.id,
@@ -128,10 +128,10 @@ class Sister(db.Model):
     brothers = relationship("Brother",
                     secondary=association_table
                     back_populates="sisters") # this line is so it updates the field when Sister is updated
-                    
+
     def __ref__(self):
         return f'<Sister {self.name}>'
-        
+
     def serialize(self):
         return {
             "id": self.id,
@@ -145,10 +145,10 @@ class Brother(db.Model):
     sisters = relationship("Sister",
                     secondary=association_table
                     back_populates="brothers")
-                    
+
     def __ref__(self):
         return f'<Brother {self.name}>'
-        
+
     def serialize(self):
         return {
             "id": self.id,
