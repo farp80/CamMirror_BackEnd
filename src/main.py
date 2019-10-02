@@ -9,11 +9,12 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from time import sleep
 from utils import APIException, generate_sitemap
-from models import db, Users, Profiles, Membership
+from models import db, Users, Profiles, Membership, Pictures
 from flask_jwt_simple import (
     JWTManager, jwt_required, create_jwt, get_jwt_identity
 )
 from models import Users
+from sqlalchemy import distinct
 
 app = Flask(__name__)
 # Setup the Flask-JWT-Simple extension
@@ -116,6 +117,45 @@ def get_all_profiles():
     profile_query = list(map(lambda x: x.serialize(), profile_query))
     return jsonify(profile_query), 200
 
+
+@app.route('/picture/<int:profile_id>', methods=['GET'])
+def get_profiles(profile_id):
+    profile_picture_query = Pictures.query.filter_by(user_id = profile_id).distinct(Pictures.folder)
+    return jsonify("Good"), 200
+
+
+@app.route('/pictures', methods=['POST'])
+def pictures():
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request"}), 400
+
+    params = request.get_json()
+    user_id = params.get('user_id', None)
+    date = params.get('date', None)
+    updated_date = params.get('update_date', None)
+    url = params.get('url', None)
+
+    if not user_id:
+        return jsonify({"msg": "Missing user_id"}), 400
+    if not date:
+        return jsonify({"msg": "Missing date"}), 400
+    if not updated_date:
+        return jsonify({"msg": "Missing updated_date parameter"}), 400
+    if not url:
+        return jsonify({"msg": "Missing URL parameter"}), 400
+
+    picture = Pictures(
+        url = url,
+        date = date,
+        updated_date = updated_date,
+        pic_folder = folder,
+        user_id = user_id)
+
+    db.session.add(picture)
+    db.session.commit()
+    return jsonify({"msg": "URL Picture: " + url + " was created"}), 200
+
+
 @app.route('/profile', methods=['POST', 'DELETE', 'PUT'])
 @jwt_required
 def profile():
@@ -203,7 +243,6 @@ def membership():
     db.session.delete(membership1)
     db.session.commit()
     return jsonify(user1.serialize()), 200
-
 
 
 # Protect a view with jwt_required, which requires a valid jwt

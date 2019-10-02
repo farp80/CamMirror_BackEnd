@@ -4,6 +4,7 @@ import datetime
 db = SQLAlchemy()
 
 class Users(db.Model):
+    __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(120), unique=False, nullable=False)
     last_name = db.Column(db.String(120), unique=False, nullable=False)
@@ -32,7 +33,7 @@ class Membership(db.Model):
     # Notice that each column is also a normal Python instance attribute.
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(250), nullable=False)
-    profile_id = db.Column(db.Integer, db.ForeignKey('profile.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     def __repr__(self):
         return '<Membership %r>' % self.id
@@ -76,10 +77,24 @@ class Pictures(db.Model):
     # Here we define columns for the table person
     # Notice that each column is also a normal Python instance attribute.
     id = db.Column(db.Integer, primary_key=True)
-    url = db.Column(db.String(250), nullable=False)
+    url = db.Column(db.String(500), nullable=False)
     date = db.Column(db.String(250), nullable=False)
     updated_date = db.Column(db.String(250), nullable=False)
+    pic_folder = db.Column(db.String(250), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+    def __repr__(self):
+        return '<Pictures %r>' % self.id
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "updated_date": self.updated_date,
+            "date": self.date,
+            "pic_folder": self.pic_folder,
+            "user_id": self.user_id,
+            "url": self.url
+        }
 
 
 
