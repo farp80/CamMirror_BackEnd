@@ -54,10 +54,7 @@ def signup():
     last_name = params.get('last_name', None)
     email = params.get('email', None)
     password = params.get('password', None)
-    # print(first_name)
-    # print(last_name)
-    # print(email)
-    # print(password)
+
     if not first_name:
         return jsonify({"msg": "Missing username parameter"}), 400
     if not last_name:
@@ -77,7 +74,12 @@ def signup():
         return jsonify({"msg": "User Already Exists"}), 405
 
 
-    user1 = Users(first_name=first_name, last_name=last_name, email=email, password=password)
+    user1 = Users(
+        first_name = first_name,
+        last_name = last_name,
+        email = email,
+        password = password)
+
     db.session.add(user1)
     db.session.commit()
     return jsonify({"msg": "User created"}), 200
