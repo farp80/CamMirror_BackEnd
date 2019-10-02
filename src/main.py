@@ -3,6 +3,7 @@ This module takes care of starting the API Server, Loading the DB and Adding the
 """
 import os
 import datetime
+import hashlib
 from flask import Flask, request, jsonify, url_for
 from flask_migrate import Migrate
 from flask_swagger import swagger
@@ -74,12 +75,15 @@ def signup():
     if people_query:
         return jsonify({"msg": "User Already Exists"}), 405
 
+    m = hashlib.md5()
+    m.update(password.encode("utf-8"))
+    pwdHashed = m.hexdigest()
 
     user1 = Users(
         first_name = first_name,
         last_name = last_name,
         email = email,
-        password = password)
+        password = pwdHashed)
 
     db.session.add(user1)
     db.session.commit()
@@ -101,7 +105,11 @@ def login():
     if not password:
         return jsonify({"msg": "Missing password parameter"}), 400
 
-    usercheck = Users.query.filter_by(email=email, password=password).first()
+    m = hashlib.md5()
+    m.update(password.encode("utf-8"))
+    pwdHashed = m.hexdigest()
+
+    usercheck = Users.query.filter_by(email=email, password=pwdHashed).first()
     if usercheck == None:
         return jsonify({"msg": "Bad username or password"}), 401
 
@@ -119,9 +127,9 @@ def get_all_profiles():
 
 @app.route('/picture/<int:profile_id>', methods=['GET'])
 def get_picture(profile_id):
-    profile_picture_query = Pictures.query.filter_by(user_id = profile_id).distinct(Pictures.folder)
+    profile_picture_query = Pictures.query.filter_by(user_id = profile_id).distinct(Pictures.pic_folder)
 
-    all_pictures_folders = list(map(lambda x: x.serialize(), profile_picture_query))
+    all_pictures_folders = list(map(lambda x: x.serialize().pic_folder, profile_picture_query))
     return jsonify(all_pictures_folders), 200
 
 
