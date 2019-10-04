@@ -43,7 +43,7 @@ class Membership(db.Model):
         return {
             "name": self.name,
             "id": self.id,
-            "profile_id": self.profile_id
+            "user_id": self.user_id
         }
 
 

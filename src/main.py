@@ -237,11 +237,14 @@ def membership():
         membership_name = params.get('membership_name', None)
         user_id = params.get('user_id', None)
 
-        new_member = Membership(profile_id=params['profile_id'])
+        print(membership_name)
+        print(user_id)
+
+        new_member = Membership(user_id=params['user_id'])
         db.session.add(new_member)
         db.session.commit()
 
-        membershipcheck = Membership.query.filter_by(profile_id=profile_id).first()
+        membershipcheck = Membership.query.filter_by(user_id=user_id).first()
 
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request"}), 400
