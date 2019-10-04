@@ -8,6 +8,7 @@ from flask import Flask, request, jsonify, url_for
 from flask_migrate import Migrate
 from flask_swagger import swagger
 from flask_cors import CORS
+from sqlalchemy import distinct
 from time import sleep
 from utils import APIException, generate_sitemap
 from models import db, Users, Profiles, Membership, Pictures
@@ -127,9 +128,8 @@ def get_all_profiles():
 
 @app.route('/picture/<int:profile_id>', methods=['GET'])
 def get_picture(profile_id):
-    profile_picture_query = Pictures.query.filter_by(user_id = profile_id).distinct(Pictures.pic_folder)
-
-    all_pictures_folders = list(map(lambda x: x.serialize().pic_folder, profile_picture_query))
+    profile_picture_query = Pictures.query.filter_by(user_id = profile_id)
+    all_pictures_folders = list(map(lambda x: x.serialize(), profile_picture_query))
     return jsonify(all_pictures_folders), 200
 
 
@@ -143,6 +143,7 @@ def pictures():
     date = params.get('date', None)
     updated_date = params.get('update_date', None)
     url = params.get('url', None)
+    folder = params.get('folder', None)
 
     if not user_id:
         return jsonify({"msg": "Missing user_id"}), 400
@@ -152,6 +153,9 @@ def pictures():
         return jsonify({"msg": "Missing updated_date parameter"}), 400
     if not url:
         return jsonify({"msg": "Missing URL parameter"}), 400
+    if not folder:
+        return jsonify({"msg": "Missing Folder parameter"}), 400
+
 
     picture = Pictures(
         url = url,
