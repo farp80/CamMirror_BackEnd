@@ -224,34 +224,35 @@ def profile():
         return jsonify(user1.serialize()), 200
 
 
-@app.route('/profile/membership', methods=['POST', 'DELETE'])
+@app.route('/membership', methods=['POST', 'DELETE'])
 @jwt_required
 def membership():
 
-    params = request.get_json()
-    name = params.get('name', None)
-    profile_id = params.get('profile_id', None)
+    if request.method == 'POST':
+        params = request.get_json()
+        membership_name = params.get('membership_name', None)
+        user_id = params.get('user_id', None)
 
-    new_member = Membership(profile_id=params['profile_id'])
-    db.session.add(new_member)
-    db.session.commit()
+        new_member = Membership(profile_id=params['profile_id'])
+        db.session.add(new_member)
+        db.session.commit()
 
-    membershipcheck = Membership.query.filter_by(profile_id=profile_id).first()
+        membershipcheck = Membership.query.filter_by(profile_id=profile_id).first()
 
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request"}), 400
 
-    if not name:
-        return jsonify({"msg": "Missing name parameter"}), 400
+    if not membership_name:
+        return jsonify({"msg": "Missing membership_name parameter"}), 400
 
     if request.method == 'DELETE':
         membership1 = Membership.query.get(profile_id)
     if membership1 is None:
         raise APIException('Profile not found', status_code=404)
 
-    db.session.delete(membership1)
-    db.session.commit()
-    return jsonify(user1.serialize()), 200
+        db.session.delete(membership1)
+        db.session.commit()
+        return jsonify(user1.serialize()), 200
 
 
 # Protect a view with jwt_required, which requires a valid jwt
