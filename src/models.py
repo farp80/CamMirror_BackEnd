@@ -9,7 +9,7 @@ class Users(db.Model):
     first_name = db.Column(db.String(120), unique=False, nullable=False)
     last_name = db.Column(db.String(120), unique=False, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(255), unique=False, nullable=False)
+    password = db.Column(db.String(256), unique=False, nullable=False)
     created_date = db.Column(db.DateTime, default=datetime.datetime.now(), nullable=True)
 
     def __repr__(self):
@@ -32,7 +32,11 @@ class Membership(db.Model):
     # Here we define columns for the table person
     # Notice that each column is also a normal Python instance attribute.
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(250), nullable=False)
+    membership_name = db.Column(db.String(250), unique=False, nullable=False)
+    card_holder_name = db.Column(db.String(120), unique=False, nullable=False)
+    card_number = db.Column(db.Integer, unique=True, nullable=False)
+    card_expiration_date = db.Column(db.Integer, unique=True, nullable=False)
+    card_cvv = db.Column(db.Integer, unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     def __repr__(self):
@@ -41,8 +45,12 @@ class Membership(db.Model):
 
     def serialize(self):
         return {
-            "name": self.name,
             "id": self.id,
+            "membership_name": self.membership_name,
+            "card_holder_name": self.card_holder_name,
+            "card_number": self.card_number,
+            "card_expiration_date": self.card_expiration_date,
+            "card_cvv": self.card_cvv,
             "user_id": self.user_id
         }
 
