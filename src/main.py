@@ -278,13 +278,20 @@ def membership():
 
     if request.method == 'GET':
         membership_query = Membership.query.all()
-        membership_query = list(map(lambda x: x.serialize(), membership_query))
+        membership = list(map(lambda x: x.serialize(), membership_query))
         return jsonify(membership), 200
 
     if request.method == 'POST':
-
         if not request.is_json:
             return jsonify({"msg": "Missing JSON in request"}), 400
+
+        params = request.get_json()
+        membership_name = params.get('membership_name', None)
+        card_holder_name = params.get('card_holder_name', None)
+        card_number = params.get('card_number', None)
+        card_expiration_date = params.get('card_expiration_date', None)
+        card_cvv = params.get('card_cvv', None)
+        user_id = params.get('user_id', None)
 
         if not membership_name:
             return jsonify({"msg": "Missing membership_name parameter"}), 400
@@ -301,36 +308,33 @@ def membership():
         if not card_cvv:
             return jsonify({"msg": "Missing card_cvv parameter"}), 400
 
-            new_member = Membership(
-                membership_name = membership_name,
-                card_holder_name = card_holder_name,
-                card_number = card_number,
-                card_expiration_date = card_expiration_date,
-                card_cvv = card_cvv,
-                user_id = params ['user_id'])
+        new_member = Membership(
+            membership_name = membership_name,
+            card_holder_name = card_holder_name,
+            card_number = card_number,
+            card_expiration_date = card_expiration_date,
+            card_cvv = card_cvv,
+            user_id = params ['user_id'])
 
-            db.session.add(new_member)
-            db.session.commit()
+        db.session.add(new_member)
+        db.session.commit()
 
-            membershipcheck = Membership.query.filter_by(user_id=user_id).first()
-
-        params = request.get_json()
-        membership_name = params.get('membership_name', None)
-        card_holder_name = params.get('card_holder_name', None)
-        card_number = params.get('card_number', None)
-        card_expiration_date = params.get('card_expiration_date', None)
-        card_cvv = params.get('card_cvv', None)
-        user_id = params.get('user_id', None)
-
+        return jsonify(new_member), 200
 
     if request.method == 'DELETE':
-        membership1 = Membership.query.get(profile_id)
-    if membership1 is None:
-        raise APIException('Profile not found', status_code=404)
+        params = request.get_json()
 
-        db.session.delete(membership1)
-        db.session.commit()
-        return jsonify(user1.serialize()), 200
+        # Salvador, you need to get the user_id from the params. That params are the settings you pass in the body
+        # in the request in FLUX.
+
+        #membership1 = Membership.query.get(profile_id)
+
+        #if membership1 is None:
+            #raise APIException('Profile not found', status_code=404)
+
+        #db.session.delete(membership1)
+        #db.session.commit()
+        #return jsonify(user1.serialize()), 200
 
 
 # Protect a view with jwt_required, which requires a valid jwt
