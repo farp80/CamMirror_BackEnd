@@ -39,6 +39,19 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
+# @app.route('/migrate_user_hash', methods=['GET'])
+# def migrate_users_passwords():
+#     users = Users.query.all()
+#     count = 0
+#     for u in users:
+#         count = count + 1
+#         m = hashlib.md5()
+#         m.update(u.password.encode("utf-8"))
+#         u.password = m.hexdigest()
+
+#     db.session.commit()
+
+#     return jsonify(count+" users were updated"), 200
 
 @app.route('/user', methods=['GET'])
 def get_all_users():
@@ -258,29 +271,57 @@ def profile():
         return jsonify(response), 200
 
 
-@app.route('/membership', methods=['POST', 'DELETE'])
+
+@app.route('/membership', methods=['POST', 'DELETE', 'GET'])
 @jwt_required
 def membership():
 
+    if request.method == 'GET':
+        membership_query = Membership.query.all()
+        membership_query = list(map(lambda x: x.serialize(), membership_query))
+        return jsonify(membership), 200
+
     if request.method == 'POST':
+
+        if not request.is_json:
+            return jsonify({"msg": "Missing JSON in request"}), 400
+
+        if not membership_name:
+            return jsonify({"msg": "Missing membership_name parameter"}), 400
+
+        if not card_holder_name:
+            return jsonify({"msg": "Missing card_holder_name parameter"}), 400
+
+        if not card_number:
+            return jsonify({"msg": "Missing card_number parameter"}), 400
+
+        if not card_expiration_date:
+            return jsonify({"msg": "Missing card_expiration_date parameter"}), 400
+
+        if not card_cvv:
+            return jsonify({"msg": "Missing card_cvv parameter"}), 400
+
+            new_member = Membership(
+                membership_name = membership_name,
+                card_holder_name = card_holder_name,
+                card_number = card_number,
+                card_expiration_date = card_expiration_date,
+                card_cvv = card_cvv,
+                user_id = params ['user_id'])
+
+            db.session.add(new_member)
+            db.session.commit()
+
+            membershipcheck = Membership.query.filter_by(user_id=user_id).first()
+
         params = request.get_json()
         membership_name = params.get('membership_name', None)
+        card_holder_name = params.get('card_holder_name', None)
+        card_number = params.get('card_number', None)
+        card_expiration_date = params.get('card_expiration_date', None)
+        card_cvv = params.get('card_cvv', None)
         user_id = params.get('user_id', None)
 
-        print(membership_name)
-        print(user_id)
-
-        new_member = Membership(user_id=params['user_id'])
-        db.session.add(new_member)
-        db.session.commit()
-
-        membershipcheck = Membership.query.filter_by(user_id=user_id).first()
-
-    if not request.is_json:
-        return jsonify({"msg": "Missing JSON in request"}), 400
-
-    if not membership_name:
-        return jsonify({"msg": "Missing membership_name parameter"}), 400
 
     if request.method == 'DELETE':
         membership1 = Membership.query.get(profile_id)
