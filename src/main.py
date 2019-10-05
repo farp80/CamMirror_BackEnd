@@ -115,15 +115,8 @@ def login():
         return jsonify({"msg": "Bad username or password"}), 401
 
     # Identity can be any data that is json serializable
-    ret = {'jwt': create_jwt(identity=email),'id': usercheck.id}
+    ret = {'jwt': create_jwt(identity=email),'id': usercheck.id, 'email':usercheck.email}
     return jsonify(ret), 200
-
-
-@app.route('/profile', methods=['GET'])
-def get_all_profiles():
-    profile_query = Profiles.query.all()
-    profile_query = list(map(lambda x: x.serialize(), profile_query))
-    return jsonify(profile_query), 200
 
 
 @app.route('/picture/<int:profile_id>', methods=['GET'])
@@ -168,12 +161,18 @@ def pictures():
     db.session.commit()
     return jsonify({"msg": "URL Picture: " + url + " was created"}), 200
 
+@app.route('/profile', methods=['GET'])
+def get_all_profiles():
+    profile_query = Profiles.query.all()
+    profile_query = list(map(lambda x: x.serialize(), profile_query))
+    return jsonify(profile_query), 200
+
 
 @app.route('/profile', methods=['POST', 'DELETE', 'PUT'])
 @jwt_required
 def profile():
     if not request.get_json:
-        return jsonify({"msg": "Missing JSON in request"}), 400
+        raise APIException("You need to specify the request body as a json object", status_code=400)
 
     params = request.get_json()
     user_id = params.get('user_id', None)
@@ -207,25 +206,56 @@ def profile():
         return jsonify(user1.serialize()), 200
 
     if request.method == 'PUT':
-        body = request.get_json()
+        params = request.get_json()
 
-        if body is None:
-            raise APIException("You need to specify the request body as a json object", status_code=400)
+        user_id = params.get('user_id', None)
+        first_name = params.get('first_name', None)
+        last_name = params.get('last_name', None)
+        password = params.get('password', None)
+        email = params.get('email', None)
 
-        user1 = Users.query.get(user_id)
-        if user1 is None:
+        if not user_id:
+            return jsonify({"msg": "Missing user_id"}), 400
+        if not first_name:
+            return jsonify({"msg": "Missing First Name"}), 400
+        if not last_name:
+            return jsonify({"msg": "Missing Last Name"}), 400
+        if not email:
+            return jsonify({"msg": "Missing Email"}), 400
+        if not password:
+            return jsonify({"msg": "Missing Password"}), 400
+
+        current_profile = Profiles.query.get(user_id)
+        user_profile_settings = Users.query.get(user_id)
+
+        if user_profile_settings is None:
             raise APIException('User not found', status_code=404)
-        if "first_name" in body:
-            user1.full_name = body["first_name"]
-        if "email" in body:
-            user1.email = body["email"]
-        if "last_name" in body:
-            user1.phone = body["last_name"]
-        if "password" in body:
-            user1.address = body["password"]
+
+        if current_profile is None:
+            raise APIException('Profile not found', status_code=404)
+
+        user_profile_settings.first_name = first_name
+        user_profile_settings.email = email
+        user_profile_settings.last_name = last_name
+
+        m = hashlib.md5()
+        m.update(password.encode("utf-8"))
+        pwdHashed = m.hexdigest()
+        user_profile_settings.password = pwdHashed
+
+        updated_date = datetime.datetime.now()
+        current_profile.updated_date = updated_date
 
         db.session.commit()
-        return jsonify(user1.serialize()), 200
+
+        response = {
+            "first_name": first_name,
+            "last_name": last_name,
+            "currentUserId": user_id,
+            "updated_date": updated_date,
+            "email": email
+        }
+        return jsonify(response), 200
 
 
 @app.route('/membership', methods=['POST', 'DELETE'])
