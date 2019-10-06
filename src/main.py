@@ -281,7 +281,7 @@ def profile():
 
 
 
-@app.route('/membership', methods=['POST', 'DELETE', 'GET'])
+@app.route('/membership', methods=['POST', 'DELETE', 'GET', 'PUT'])
 @jwt_required
 def membership():
 
@@ -330,21 +330,72 @@ def membership():
 
         return jsonify(new_member), 200
 
-    if request.method == 'DELETE':
+
+    if request.method == 'PUT':
         params = request.get_json()
 
-        # Salvador, you need to get the user_id from the params. That params are the settings you pass in the body
-        # in the request in FLUX.
+        user_id = params.get('user_id', None)
+        membership_name = params.get('membership_name', None)
+        card_holder_name = params.get('card_holder_name', None)
+        card_number = params.get('card_number', None)
+        card_expiration_date = params.get('card_expiration_date', None)
+        card_cvv = params.get('card_cvv', None)
 
-        #membership1 = Membership.query.get(profile_id)
+        if not user_id:
+            return jsonify({"msg": "Missing user_id"}), 400
+        if not membership_name:
+            return jsonify({"msg": "Missing Membership Name"}), 400
+        if not card_holder_name:
+            return jsonify({"msg": "Missing Card Holder Name"}), 400
+        if not card_number:
+            return jsonify({"msg": "Missing Card Number"}), 400
+        if not card_expiration_date:
+            return jsonify({"msg": "Missing Card Expiration Date"}), 400
+        if not card_cvv:
+            return jsonify({"msg": "Missing Card CVV"}), 400
 
-        #if membership1 is None:
-            #raise APIException('Profile not found', status_code=404)
+        print('$$hnvruhvn'+ str(user_id))
 
-        #db.session.delete(membership1)
-        #db.session.commit()
-        #return jsonify(user1.serialize()), 200
+        user_member_settings = Membership.query.filter_by(user_id=user_id).first()
 
+        if user_member_settings is None:
+            raise APIException('Member not found', status_code=404)
+
+
+        user_member_settings.membership_name = membership_name
+        user_member_settings.card_holder_name = card_holder_name
+        user_member_settings.card_number = card_number
+        user_member_settings.card_expiration_date = card_expiration_date
+        user_member_settings.card_cvv = card_cvv
+
+        updated_date = datetime.datetime.now()
+        user_member_settings.updated_date = updated_date
+
+        db.session.commit()
+
+        response = {
+            "membership_name": membership_name,
+            "card_holder_name": card_holder_name,
+            "card_number": card_number,
+            "card_expiration_date": card_expiration_date,
+            "card_cvv": card_cvv,
+            "currentUserId": user_id,
+            "updated_date": updated_date
+
+        }
+        return jsonify(response), 200
+
+
+    if request.method == 'DELETE':
+        membership1 = Membership.query.get(user_id)
+
+        if membership1 is None:
+            raise APIException('Membership not found', status_code=404)
+
+        db.session.delete(membership1)
+        db.session.commit()
+
+        return jsonify(user1.serialize()), 200
 
 # Protect a view with jwt_required, which requires a valid jwt
 # to be present in the headers.
