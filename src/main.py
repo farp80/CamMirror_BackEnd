@@ -181,18 +181,6 @@ def get_all_profiles():
     return jsonify(profile_query), 200
 
 
-@app.route('/profile/<int:user_id>', methods=['GET'])
-def get_profile(user_id):
-    profile_to_check = Profiles.query.filter_by(user_id=user_id).first()
-
-    if profile_to_check == None:
-        return jsonify({"code": "100"}),200
-
-    profile_to_check.updated_date = datetime.datetime.now()
-    db.session.commit()
-    #Change the response
-    return jsonify({"code": "150"}),200
-
 @app.route('/profile', methods=['POST', 'DELETE', 'PUT'])
 @jwt_required
 def profile():
@@ -203,18 +191,27 @@ def profile():
     user_id = params.get('user_id', None)
 
     if request.method == 'POST':
-        profilecheck = Profiles.query.filter_by(user_id=user_id).first()
+        profile_to_check = Profiles.query.filter_by(user_id=user_id).first()
         user1 = Users.query.get(user_id)
+        code = 100
+        current_date = datetime.datetime.now()
 
-        new_profile = Profiles(user_id=params['user_id'], membership_id=None)
-        db.session.add(new_profile)
+        if profile_to_check is None:
+            new_profile = Profiles(user_id=params['user_id'], membership_id=None)
+            db.session.add(new_profile)
+        else:
+            profile_to_check.updated_date = current_date
+            code = 150
+
         db.session.commit()
 
         response = {
             "first_name": user1.first_name,
             "last_name": user1.last_name,
             "currentUserId": user1.id,
-            "created_date": user1.created_date
+            "created_date": user1.created_date,
+            "updated_date": current_date,
+            "code": code
         }
 
         return jsonify(response), 200
