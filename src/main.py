@@ -147,7 +147,7 @@ def pictures():
     params = request.get_json()
     user_id = params.get('user_id', None)
     date = params.get('date', None)
-    updated_date = params.get('update_date', None)
+    updated_date = params.get('updated_date', None)
     url = params.get('url', None)
     folder = params.get('folder', None)
 
@@ -155,12 +155,12 @@ def pictures():
         return jsonify({"msg": "Missing user_id"}), 400
     if not date:
         return jsonify({"msg": "Missing date"}), 400
-    if not updated_date:
-        return jsonify({"msg": "Missing updated_date parameter"}), 400
     if not url:
         return jsonify({"msg": "Missing URL parameter"}), 400
     if not folder:
         return jsonify({"msg": "Missing Folder parameter"}), 400
+    if not updated_date:
+        return jsonify({"msg": "Missing updated_date parameter"}), 400
 
 
     picture = Pictures(
