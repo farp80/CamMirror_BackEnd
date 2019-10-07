@@ -354,8 +354,6 @@ def membership():
         if not card_cvv:
             return jsonify({"msg": "Missing Card CVV"}), 400
 
-        print('$$hnvruhvn'+ str(user_id))
-
         user_member_settings = Membership.query.filter_by(user_id=user_id).first()
 
         if user_member_settings is None:
